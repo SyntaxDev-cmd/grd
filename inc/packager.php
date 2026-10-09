@@ -62,11 +62,34 @@ function gg_build_package(string $server, string $tag = '', bool $ofusca = false
             $min = @php_strip_whitespace($f->getPathname());
             if ($min !== '' && $min !== false) { file_put_contents($f->getPathname(), $min); $obf++; }
         }
-        foreach (['inc/license.php', 'inc/license_config.php'] as $lf) {
+        // Proteção dos arquivos sensíveis (cliente de licença + config): AES-256-CBC via openssl.
+        // A chave é derivada em tempo de execução de um "pepper" próprio deste build; o corpo fica
+        // comprimido e cifrado (não é mais um base64 que se lê com um comando). É defesa em
+        // profundidade: a segurança de verdade continua sendo a assinatura RSA (o comprador não
+        // tem a chave privada), mas isto dificulta muito remendar o license_guard().
+        // Só o cliente de licença (inc/license.php) é cifrado: é a lógica que um pirata tentaria remendar.
+        // O inc/license_config.php guarda apenas dado público (chave PÚBLICA, URL do servidor e tag do
+        // comprador) — cifrá-lo não acrescenta segurança e quebraria o require() de um arquivo eval-ado.
+        $pepper = 'GG1|' . hash('sha256', $pub . '|' . $tag . '|' . $server);
+        foreach (['inc/license.php'] as $lf) {
             $src = preg_replace('/^<\?php\s*/', '', (string)file_get_contents($out . '/' . $lf), 1);
-            $enc = base64_encode(gzdeflate($src, 9));
-            $call = str_starts_with(ltrim($src), 'return') ? 'return eval' : 'eval';
-            file_put_contents($out . '/' . $lf, "<?php\n/* protegido */\n$call(gzinflate(base64_decode('" . $enc . "')));\n");
+            $isReturn = str_starts_with(ltrim($src), 'return');
+            $key = hash('sha256', $pepper . '|' . $lf, true);
+            $iv = random_bytes(16);
+            $ct = openssl_encrypt(gzdeflate($src, 9), 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+            if ($ct === false) { // openssl indisponível: mantém ao menos o empacotamento comprimido
+                $enc = base64_encode(gzdeflate($src, 9));
+                file_put_contents($out . '/' . $lf, "<?php\n/* protegido */\n" . ($isReturn ? 'return eval' : 'eval') . "(gzinflate(base64_decode('$enc')));\n");
+                continue;
+            }
+            $blob = base64_encode($iv . $ct);
+            $call = $isReturn ? 'return eval' : 'eval';
+            $loader = "<?php\n/* protegido */\n"
+                . '$p=' . var_export($pepper, true) . ";\$l=" . var_export($lf, true) . ';'
+                . '$k=hash("sha256",$p."|".$l,true);$b=base64_decode("' . $blob . '");'
+                . '$d=@gzinflate((string)openssl_decrypt(substr($b,16),"aes-256-cbc",$k,OPENSSL_RAW_DATA,substr($b,0,16)));'
+                . "if(\$d===false){http_response_code(500);exit;}$call(\$d);\n";
+            file_put_contents($out . '/' . $lf, $loader);
         }
     }
 
