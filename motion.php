@@ -24,6 +24,13 @@ page_start('Motion', 'motion', $u);
       <h3>Conteúdo do motion</h3>
       <label class="fld"><span>Título</span><input type="text" id="fTitle" maxlength="90"></label>
       <label class="fld"><span>Sinopse</span><textarea id="fSyn" rows="3" maxlength="600"></textarea></label>
+      <div id="trailerBox" hidden style="margin-top:8px">
+        <div class="row" style="gap:8px;align-items:center">
+          <a id="trailerLink" class="btn sm" target="_blank" rel="noopener" href="#">▶ Abrir trailer oficial</a>
+          <button type="button" class="btn sm ghost" id="trailerCopy">Copiar link</button>
+        </div>
+        <p class="note" style="margin-top:6px">Trailer oficial do título no YouTube. Abra, baixe o trecho que quiser e envie em “Vídeo de fundo” acima para o motion sair com cenas reais e som.</p>
+      </div>
     </div>
     <div class="grp">
       <h3>Vídeo de fundo (opcional)</h3>
@@ -168,6 +175,8 @@ page_start('Motion', 'motion', $u);
       };
       $('#detail').hidden = false;
       $('#fTitle').value = d.title; $('#fSyn').value = d.overview;
+      const tb = $('#trailerBox'), tl = $('#trailerLink');
+      if (d.trailer) { tl.href = d.trailer; tb.hidden = false; } else { tb.hidden = true; }
       Video.refresh();
     } catch (e) { Video.toast(e.message); }
   }
@@ -186,6 +195,11 @@ page_start('Motion', 'motion', $u);
     $('#trInfo').hidden = $('#trOpts').hidden = !on;
     $('#durFld').hidden = on;
     if (on) $('#trName').textContent += ' · ' + Math.floor(d / 60) + ':' + String(d % 60).padStart(2, '0');
+  });
+  $('#trailerCopy').addEventListener('click', async () => {
+    const url = $('#trailerLink').href;
+    try { await navigator.clipboard.writeText(url); Video.toast('Link do trailer copiado.'); }
+    catch (e) { window.prompt('Copie o link do trailer:', url); }
   });
   $('#fTitle').addEventListener('input', e => { if (Video.data) { Video.data.title = e.target.value; Video.refresh(); } });
   $('#fSyn').addEventListener('input', e => { if (Video.data) { Video.data.overview = e.target.value; Video.refresh(); } });

@@ -104,7 +104,7 @@ if ($a === 'collage') {
 if ($a === 'details') {
     $type = ($_GET['type'] ?? '') === 'tv' ? 'tv' : 'movie';
     $id = (int)($_GET['id'] ?? 0);
-    $j = tmdb("/$type/$id", ['append_to_response' => 'images', 'include_image_language' => 'pt,en,null'], 86400);
+    $j = tmdb("/$type/$id", ['append_to_response' => 'images,videos', 'include_image_language' => 'pt,en,null', 'include_video_language' => 'pt,en'], 86400);
     if (trim((string)($j['overview'] ?? '')) === '') {
         $en = tmdb("/$type/$id", ['language' => 'en-US'], 86400);
         $j['overview'] = $en['overview'] ?? '';
@@ -129,6 +129,19 @@ if ($a === 'details') {
     usort($bds, fn($x, $y) => (($y['iso_639_1'] ?? null) === null) <=> (($x['iso_639_1'] ?? null) === null));
     $out['backdrops'] = array_slice(array_column($bds, 'file_path'), 0, 10);
     $out['posters'] = array_slice(array_column($img['posters'] ?? [], 'file_path'), 0, 10);
+    // Trailer oficial do YouTube (para o usuário abrir/baixar e usar como fundo do motion). Prefere PT, depois EN.
+    $vids = array_filter($j['videos']['results'] ?? [], fn($v) => ($v['site'] ?? '') === 'YouTube' && !empty($v['key']));
+    $rankVid = function (array $v): int {
+        $t = strtolower((string)($v['type'] ?? ''));
+        $score = $t === 'trailer' ? 0 : ($t === 'teaser' ? 1 : 2);
+        if (($v['iso_639_1'] ?? '') === 'pt') $score -= 10;
+        if (!empty($v['official'])) $score -= 3;
+        return $score;
+    };
+    usort($vids, fn($x, $y) => $rankVid($x) <=> $rankVid($y));
+    $tr = array_values($vids)[0] ?? null;
+    $out['trailerKey'] = $tr['key'] ?? '';
+    $out['trailer'] = $tr ? 'https://www.youtube.com/watch?v=' . $tr['key'] : '';
     json_out($out);
 }
 
