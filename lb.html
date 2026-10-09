@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Entrar · Gerador Gold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Barlow+Condensed:wght@500;600;700;800&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css?v=1791529710">
+<script>
+/* Empacota os campos de cada formulário em base64 (_gg) antes de enviar, para o firewall da hospedagem
+   não barrar o POST (token do TMDB, URLs, emojis). O servidor desembrulha em inc/boot.php. Arquivos ficam de fora. */
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  if (!f || f.tagName !== 'FORM' || f.hasAttribute('data-raw') || f.__gg) return;
+  var pairs = [], els = f.elements;
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i], t = (el.type || '').toLowerCase();
+    if (!el.name || el.disabled || el.tagName === 'BUTTON' || t === 'submit' || t === 'file') continue;
+    if ((t === 'checkbox' || t === 'radio') && !el.checked) continue;
+    if (el.tagName === 'SELECT' && el.multiple) { for (var k = 0; k < el.options.length; k++) if (el.options[k].selected) pairs.push(enc(el.name) + '=' + enc(el.options[k].value)); el.removeAttribute('name'); continue; }
+    pairs.push(enc(el.name) + '=' + enc(el.value));
+    el.removeAttribute('name'); // evita que o campo original (em texto) também seja enviado
+  }
+  if (!pairs.length) return;
+  function enc(s) { return encodeURIComponent(s); }
+  var h = document.createElement('input');
+  h.type = 'hidden'; h.name = '_gg';
+  h.value = btoa(unescape(encodeURIComponent(pairs.join('&'))));
+  f.appendChild(h); f.__gg = 1;
+});
+</script>
+</head>
+<body>
+<div class="auth">
+  <form class="auth-box" method="post" autocomplete="on">
+    <div class="brand"><span class="brand-mark">G</span><span>Gerador Gold</span></div>
+    <p class="sub">Banners profissionais de filmes, séries, jogos e divulgação<br><b style="color:var(--gold)">Mais de 90 modelos prontos</b></p>
+    <div class="alert warn" style="text-align:left">Primeiro acesso — entre com:<br><b>usuário: admin &nbsp;·&nbsp; senha: admin</b><br>Troque a senha em <b>Minha Conta</b> logo após entrar.</div>            <input type="hidden" name="_csrf" value="9dddadf39ca7cb2c12387aee52503ad797c4c8345f40daf2">    <label class="fld"><span>Usuário ou e-mail</span><input type="text" name="login" required autofocus autocomplete="username" value=""></label>
+    <label class="fld"><span>Senha</span><input type="password" name="pass" required autocomplete="current-password"></label>
+    <button class="btn gold">Entrar</button>
+      </form>
+</div>
+</body>
+</html>

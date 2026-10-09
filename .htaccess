@@ -1,0 +1,16 @@
+# Link de entrada de cada plataforma: /p/nome → login com a marca dela; /p/nome/cadastro → cadastro
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^p/([A-Za-z0-9_-]{2,40})/cadastro/?$ registrar.php?t=$1 [L,QSA]
+RewriteRule ^p/([A-Za-z0-9_-]{2,40})/?$ login.php?t=$1 [L,QSA]
+</IfModule>
+Options -Indexes
+DirectoryIndex index.php
+<FilesMatch "\.(sqlite|sqlite-wal|sqlite-shm|log|txt|md)$">
+Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "same-origin"
+</IfModule>

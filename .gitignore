@@ -1,0 +1,19 @@
+# Dados de runtime (gerados em produção, não versionar)
+/data/app.sqlite-wal
+/data/app.sqlite-shm
+/data/*.bak-*
+/data/php_error.log
+/data/license.lic
+/data/cache/*
+!/data/cache/.gitkeep
+/data/cache/img/*
+!/data/cache/img/.gitkeep
+/uploads/*
+!/uploads/.htaccess
+!/uploads/c
+/uploads/c/*
+!/uploads/c/.gitkeep
+# Pacote enviado / builds
+/GERADORDEX.zip
+/previa/*
+/data/app.sqlite
