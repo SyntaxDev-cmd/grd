@@ -17,3 +17,9 @@
 /GERADORDEX.zip
 /previa/*
 /data/app.sqlite
+
+# chaves de licença (ficam só no servidor, nunca no git)
+/data/license_private.pem
+/data/license_public.pem
+# artefatos de teste
+/*.html
