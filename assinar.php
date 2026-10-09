@@ -78,7 +78,7 @@ page_start('Assinar plano', 'assinar', $u);
   const $ = s => document.querySelector(s), base = <?= json_encode(BASE) ?>, csrf = <?= json_encode(csrf()) ?>;
   let timer = 0, order = 0;
   const post = async p => {
-    const r = await fetch(base + '/api/pay.php', { method: 'POST', headers: { 'X-CSRF': csrf }, body: new URLSearchParams(p) });
+    const r = await fetch(base + '/api/pay.php', { method: 'POST', headers: { 'X-CSRF': csrf }, body: window.GG_body(p) });
     const j = await r.json().catch(() => ({ error: 'Resposta inválida do servidor (HTTP ' + r.status + ').' }));
     if (!r.ok || j.error) throw new Error(j.error || 'Erro ' + r.status);
     return j;

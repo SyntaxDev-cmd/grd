@@ -52,7 +52,7 @@
   }
   Video.toast = toast;
   Video.get = async function (path) {
-    const r = await fetch(C.base + path);
+    const r = await fetch(C.base + window.GG_url(path));
     const j = await r.json().catch(() => ({ error: 'Resposta inválida do servidor (HTTP ' + r.status + ').' }));
     if (r.status === 401) { location.href = C.base + '/login.php'; throw new Error(j.error); }
     if (r.status === 402) throw new Error(j.error || 'Assine um plano para continuar.');
@@ -725,7 +725,7 @@
     const goPlan = msg => { toast(msg); setTimeout(() => { location.href = C.base + '/assinar.php'; }, 2400); };
     if (C.locked) { goPlan('Assine um plano para gerar seus vídeos.'); return; }
     try {
-      const r0 = await fetch(C.base + '/api/user.php', { method: 'POST', headers: { 'X-CSRF': C.csrf }, body: new URLSearchParams({ a: 'log', kind: 'video', n: 1, layout: st.style, format: st.format, title: Video.data.title || '' }) });
+      const r0 = await fetch(C.base + '/api/user.php', { method: 'POST', headers: { 'X-CSRF': C.csrf }, body: window.GG_body({ a: 'log', kind: 'video', n: 1, layout: st.style, format: st.format, title: Video.data.title || '' }) });
       if (r0.status === 402) { const j0 = await r0.json().catch(() => ({})); goPlan(j0.error || 'Assine um plano para continuar.'); return; }
     } catch (e) { /* sem conexão: segue e deixa a gravação acontecer */ }
     if (!window.MediaRecorder || !cv.captureStream) { toast('Este navegador não grava vídeo. Use o Chrome, Edge ou Firefox atualizado.'); return; }

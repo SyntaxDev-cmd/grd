@@ -201,14 +201,14 @@
 
   /* ---------- API ---------- */
   async function post(params) {
-    const body = new URLSearchParams(Object.assign({ kind }, params));
+    const body = window.GG_body(Object.assign({ kind }, params));
     const r = await fetch(C.base + '/api/user.php', { method: 'POST', headers: { 'X-CSRF': C.csrf }, body });
     const j = await r.json().catch(() => ({ error: 'Resposta inválida do servidor.' }));
     if (!r.ok || j.error) throw new Error(j.error || 'Erro ' + r.status);
     return j;
   }
   Editor.get = async function (path) {
-    const r = await fetch(C.base + path);
+    const r = await fetch(C.base + window.GG_url(path));
     const j = await r.json().catch(() => ({ error: 'Resposta inválida do servidor (HTTP ' + r.status + ').' }));
     if (r.status === 401) { location.href = C.base + '/login.php'; throw new Error(j.error); }
     if (r.status === 403 && !j.error.includes('restrito')) throw new Error('O servidor bloqueou a requisição (403). Aguarde alguns minutos e recarregue a página.');

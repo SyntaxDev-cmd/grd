@@ -88,7 +88,7 @@ page_start('Início', 'painel', $u);
 <script>
 (function () {
   const base = <?= json_encode(BASE) ?>, hl = document.getElementById('hl'), hg = document.getElementById('hg');
-  const get = p => fetch(base + p).then(r => r.json());
+  const get = p => fetch(base + window.GG_url(p)).then(r => r.json());
   const empty = (el, msg) => { el.innerHTML = '<div class="empty" style="grid-column:1/-1"></div>'; el.firstChild.textContent = msg; };
   get('/api/tmdb.php?a=list&cat=trending_all').then(j => {
     if (!j.items || !j.items.length) return empty(hl, j.error || 'Nenhum destaque disponível agora.');

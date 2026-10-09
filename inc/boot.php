@@ -454,6 +454,17 @@ if (!IS_CLI) {
         if ($dec !== false) { parse_str($dec, $m); if (is_array($m)) $_POST = array_merge($_POST, $m); }
         unset($_POST['_gg']);
     }
+
+    // Mesma proteção para a query string: GET com busca/URL/emoji também apanha "Forbidden" de alguns
+    // firewalls. O JS manda tudo embrulhado em base64url no parâmetro _q; aqui devolvemos para o $_GET.
+    if (isset($_GET['_q'])) {
+        $dec = base64_decode(strtr((string)$_GET['_q'], '-_', '+/'), true);
+        if ($dec !== false) {
+            parse_str($dec, $g);
+            if (is_array($g)) { $_GET = array_merge($g, $_GET); $_REQUEST = array_merge($g, $_REQUEST); }
+        }
+        unset($_GET['_q'], $_REQUEST['_q']);
+    }
 }
 
 function user(): ?array

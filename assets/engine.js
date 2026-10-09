@@ -25,7 +25,7 @@
   const cache = new Map();
   // Endereço vai em base64url: URLs completas na query string são bloqueadas por firewalls de hospedagem (403)
   const b64 = u => btoa(unescape(encodeURIComponent(u))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const proxied = u => GG.BASE + '/api/img.php?i=' + b64(u);
+  const proxied = u => GG.BASE + (window.GG_url ? window.GG_url('/api/img.php?i=' + b64(u)) : '/api/img.php?i=' + b64(u));
   const load = (src, cors) => new Promise(res => {
     const im = new Image();
     if (cors) im.crossOrigin = 'anonymous';

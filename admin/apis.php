@@ -114,7 +114,7 @@ document.querySelectorAll('[data-test]').forEach(btn => btn.addEventListener('cl
   const out = document.querySelector('[data-res="' + btn.dataset.test + '"]');
   btn.disabled = true; out.textContent = 'testando…';
   try {
-    const j = await (await fetch(<?= json_encode(url('/api/games.php?test=')) ?> + btn.dataset.test)).json();
+    const j = await (await fetch(<?= json_encode(url('/api/games.php')) ?> + window.GG_url('?test=' + btn.dataset.test))).json();
     if (j.error) { out.textContent = 'Erro: ' + j.error; out.style.color = 'var(--bad)'; }
     else if (!j.count) { out.textContent = 'Respondeu, mas nenhum jogo foi reconhecido. Revise o mapeamento.'; out.style.color = 'var(--warn)'; }
     else { out.textContent = j.count + ' jogos · ex.: ' + j.sample[0].t1 + ' x ' + j.sample[0].t2 + ' ' + j.sample[0].time; out.style.color = 'var(--ok)'; }

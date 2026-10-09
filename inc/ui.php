@@ -46,8 +46,27 @@ function head(string $title): void
 <link rel="stylesheet" href="<?= url('/assets/app.css?v=' . $v) ?>">
 <?php $c1 = (string)setting('ui_color1', ''); $c2 = (string)setting('ui_color2', ''); if (is_hex($c1) && is_hex($c2)): ?><style>:root{--gold:<?= $c1 ?>;--gold2:<?= $c2 ?>}</style><?php endif; ?>
 <script>
-/* Empacota os campos de cada formulário em base64 (_gg) antes de enviar, para o firewall da hospedagem
-   não barrar o POST (token do TMDB, URLs, emojis). O servidor desembrulha em inc/boot.php. Arquivos ficam de fora. */
+/* Blindagem contra o firewall da hospedagem (mod_security/"modo sob ataque"), que devolve "Forbidden"
+   em requisições com token do TMDB, URLs ou emojis. Tudo trafega embrulhado em base64:
+   - POST: campos no parâmetro _gg
+   - GET:  query string no parâmetro _q (base64url)
+   O servidor desembrulha os dois em inc/boot.php. */
+window.GG_b64 = function (s) { return btoa(unescape(encodeURIComponent(s))); };
+window.GG_b64url = function (s) { return window.GG_b64(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+/* Reescreve "/api/x.php?a=1&q=..." em "/api/x.php?_q=<base64url>" (deixa passar o que já estiver embrulhado). */
+window.GG_url = function (path) {
+  var i = path.indexOf('?');
+  if (i < 0) return path;
+  var qs = path.slice(i + 1);
+  if (qs.indexOf('_q=') === 0) return path;
+  return path.slice(0, i) + '?_q=' + window.GG_b64url(qs);
+};
+/* Monta um corpo de POST embrulhado em _gg a partir de um objeto ou URLSearchParams. */
+window.GG_body = function (params) {
+  var qs = (params instanceof URLSearchParams) ? params.toString() : new URLSearchParams(params).toString();
+  return new URLSearchParams({ _gg: window.GG_b64(qs) });
+};
+/* Empacota os campos de cada formulário em base64 (_gg) antes de enviar. Arquivos ficam de fora. */
 document.addEventListener('submit', function (e) {
   var f = e.target;
   if (!f || f.tagName !== 'FORM' || f.hasAttribute('data-raw') || f.__gg) return;
