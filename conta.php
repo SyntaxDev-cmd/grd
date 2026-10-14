@@ -33,12 +33,35 @@ page_start('Minha Conta', 'conta', $u);
   </div>
   <button class="btn gold">Salvar</button>
 </form>
+<?php
+$code = ref_code($u);
+$trialLink = site_link() . 't/' . $code;
+$rs = db()->prepare('SELECT COUNT(*) n, COALESCE(SUM(paid), 0) p FROM users WHERE referred_by = ?');
+$rs->execute([$u['id']]);
+$rs = $rs->fetch();
+?>
+<div class="card" style="max-width:560px">
+  <h2>Seu link de teste rápido</h2>
+  <p style="color:var(--mut);margin-top:0">Mande este link para o cliente. Ele cria o acesso de teste em <b>1 clique</b>, sem telefone e sem cartão — e já entra no sistema. Todo mundo que entrar por ele fica ligado à sua conta.</p>
+  <label class="fld"><span>Link de teste (1 clique)</span><input type="text" id="trialLink" readonly value="<?= e($trialLink) ?>"></label>
+  <div class="row wrap">
+    <button type="button" class="btn gold" id="trialCopy">Copiar link</button>
+    <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=<?= rawurlencode('Testa grátis esse gerador de banners de filmes, séries e jogos — cria teu acesso em 1 clique, sem telefone: ' . $trialLink) ?>">Enviar pelo WhatsApp</a>
+  </div>
+  <div class="stats" style="margin:16px 0 0">
+    <div class="stat"><b><?= (int)$rs['n'] ?></b><span>Testes pelo seu link</span></div>
+    <div class="stat hl"><b><?= (int)$rs['p'] ?></b><span>Já assinaram</span></div>
+  </div>
+</div>
+<script>
+document.getElementById('trialCopy').addEventListener('click', async ev => {
+  const i = document.getElementById('trialLink');
+  try { await navigator.clipboard.writeText(i.value); } catch (e) { i.select(); document.execCommand('copy'); }
+  ev.target.textContent = 'Link copiado!'; setTimeout(() => { ev.target.textContent = 'Copiar link'; }, 1800);
+});
+</script>
 <?php if (!is_admin($u)):
-    $code = ref_code($u);
     $link = site_link() . 'registrar.php?ref=' . $code;
-    $rs = db()->prepare('SELECT COUNT(*) n, COALESCE(SUM(paid), 0) p FROM users WHERE referred_by = ?');
-    $rs->execute([$u['id']]);
-    $rs = $rs->fetch();
 ?>
 <div class="card" style="max-width:560px">
   <h2>Indique e ganhe desconto</h2>

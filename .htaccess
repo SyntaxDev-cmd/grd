@@ -3,6 +3,8 @@
 RewriteEngine On
 RewriteRule ^p/([A-Za-z0-9_-]{2,40})/cadastro/?$ registrar.php?t=$1 [L,QSA]
 RewriteRule ^p/([A-Za-z0-9_-]{2,40})/?$ login.php?t=$1 [L,QSA]
+# Teste rápido de cada revenda: /t/CODIGO → cria conta de teste em 1 clique
+RewriteRule ^t/([A-Za-z0-9]{4,12})/?$ teste.php?r=$1 [L,QSA]
 </IfModule>
 Options -Indexes
 DirectoryIndex index.php

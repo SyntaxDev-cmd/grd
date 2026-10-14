@@ -67,7 +67,7 @@ head('Entrar');
     <label class="fld"><span>Senha</span><input type="password" name="pass" required autocomplete="current-password"></label>
     <button class="btn gold">Entrar</button>
     <?php if (setting('allow_register') === '1'): ?>
-      <div class="foot">Ainda não tem conta? <a href="<?= url('/registrar.php') ?>">Criar conta grátis</a></div>
+      <div class="foot">Ainda não tem conta? <a href="<?= url('/teste.php') ?>">Testar grátis em 1 clique</a></div>
     <?php endif; ?>
   </form>
 </div>

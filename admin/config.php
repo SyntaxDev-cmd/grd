@@ -34,6 +34,7 @@ if (is_post()) {
         set_setting('games_ttl', (string)max(30, min(3600, (int)($_POST['games_ttl'] ?? 120))));
         set_setting('allow_register', empty($_POST['allow_register']) ? '0' : '1');
         set_setting('trial_days', (string)max(0, min(365, (int)($_POST['trial_days'] ?? 3))));
+        set_setting('trial_limit', (string)max(1, min(999, (int)($_POST['trial_limit'] ?? 15))));
         set_setting('expired_msg', mb_substr(trim((string)($_POST['expired_msg'] ?? '')), 0, 300));
 
         $off = [];
@@ -82,9 +83,16 @@ page_start('Configurações', 'a-config', $me);
         <small>Os banners da faixa “Novo” são trocados em <a href="<?= url('/admin/conteudos.php') ?>">Conteúdos e Banners</a>.</small>
       </div>
       <div class="card">
-        <h2>Cadastro público</h2>
-        <label class="c-check" style="margin-bottom:12px"><input type="checkbox" name="allow_register" value="1" <?= setting('allow_register') === '1' ? 'checked' : '' ?>><i></i><span>Permitir que visitantes criem conta de teste</span></label>
-        <label class="fld" style="max-width:220px"><span>Dias de teste grátis</span><input type="number" name="trial_days" min="0" max="365" value="<?= $v('trial_days') ?>"></label>
+        <h2>Teste grátis e cadastro</h2>
+        <label class="c-check" style="margin-bottom:12px"><input type="checkbox" name="allow_register" value="1" <?= setting('allow_register') === '1' ? 'checked' : '' ?>><i></i><span>Permitir teste grátis e cadastro público</span></label>
+        <em style="display:block;color:var(--mut);margin:-4px 0 12px">Precisa estar ligado para o <b>Teste Rápido (1 clique)</b> e os links de teste das revendas funcionarem.</em>
+        <div class="two">
+          <label class="fld"><span>Dias de teste grátis</span><input type="number" name="trial_days" min="0" max="365" value="<?= $v('trial_days') ?>"></label>
+          <label class="fld"><span>Banners no teste</span><input type="number" name="trial_limit" min="1" max="999" value="<?= e(setting('trial_limit', '15')) ?>"></label>
+        </div>
+        <?php $adminTrial = site_link() . 't/' . ref_code($me); ?>
+        <label class="fld"><span>Seu link de teste rápido (1 clique)</span><input type="text" id="aTrial" readonly value="<?= e($adminTrial) ?>"></label>
+        <button type="button" class="btn sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('aTrial').value);this.textContent='Copiado!';setTimeout(()=>this.textContent='Copiar link',1600)">Copiar link</button>
       </div>
       <div class="card">
         <h2>Marca padrão <small>para novos usuários</small></h2>

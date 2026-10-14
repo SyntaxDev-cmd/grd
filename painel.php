@@ -23,6 +23,8 @@ $news = array_map(fn($r) => [$r['title'], $r['url'] !== '' ? (str_starts_with($r
 if (!$news) $news = [['Novos banners VOD', url('/filmes.php'), ''], ['Novas tabelas de futebol', url('/jogos.php'), ''], ['Novos modelos de divulgação', url('/divulgacao.php'), ''], ['Novos vídeos', url('/motion.php'), '']];
 $first = !empty($_SESSION['first_login']);
 unset($_SESSION['first_login']);
+$trialShow = $_SESSION['trial_show'] ?? null; // acesso gerado no Teste Rápido, mostrado uma vez
+unset($_SESSION['trial_show']);
 $channel = trim((string)setting('channel_link', ''));
 page_start('Início', 'painel', $u);
 ?>
@@ -61,6 +63,9 @@ page_start('Início', 'painel', $u);
   <div class="modal-box">
     <h2>Bem-vindo(a), <?= e($u['name'] ?: $u['username']) ?>!</h2>
     <p><?= nl2br(e((string)setting('welcome_panel', WELCOME_PANEL))) ?></p>
+    <?php if ($trialShow): ?>
+    <div class="alert ok" style="text-align:left">Guarde seu acesso para entrar de novo:<br>Usuário: <b><?= e($trialShow['user']) ?></b><br>Senha: <b><?= e($trialShow['pass']) ?></b><br><small>Você pode trocar a senha em Minha Conta.</small></div>
+    <?php endif; ?>
     <div class="row wrap">
       <?php if ($channel !== ''): ?><a class="btn gold" href="<?= e($channel) ?>" target="_blank" rel="noopener">Entrar no canal de novidades</a><?php endif; ?>
       <a class="btn" href="<?= url('/marca.php') ?>">Enviar minha logo</a>
