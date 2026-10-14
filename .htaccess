@@ -5,6 +5,14 @@ RewriteRule ^p/([A-Za-z0-9_-]{2,40})/cadastro/?$ registrar.php?t=$1 [L,QSA]
 RewriteRule ^p/([A-Za-z0-9_-]{2,40})/?$ login.php?t=$1 [L,QSA]
 # Teste rápido de cada revenda: /t/CODIGO → cria conta de teste em 1 clique
 RewriteRule ^t/([A-Za-z0-9]{4,12})/?$ teste.php?r=$1 [L,QSA]
+# API de revenda: /api/v1/recurso → api/v1.php/recurso (PATH_INFO)
+RewriteRule ^api/v1(/.*)?$ api/v1.php$1 [L,QSA]
+# Repassa o cabeçalho Authorization ao PHP (algumas hospedagens o removem)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+<IfModule mod_setenvif.c>
+SetEnvIfNoCase Authorization "(.+)" HTTP_AUTHORIZATION=$1
 </IfModule>
 Options -Indexes
 DirectoryIndex index.php

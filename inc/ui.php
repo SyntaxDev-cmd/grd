@@ -121,6 +121,7 @@ function page_start(string $title, string $active, array $u, string $bodyClass =
         ['a-lib', '/admin/conteudos.php', 'film', 'Conteúdos e Banners'],
         ['a-plans', '/admin/planos.php', 'tag', 'Planos e Pagamentos'],
         ['a-apis', '/admin/apis.php', 'plug', 'APIs de Jogos'],
+        ['api', '/api.php', 'code', 'API de Revenda'],
         ['a-config', '/admin/config.php', 'gear', 'Configurações'],
     ];
     if (is_file(ROOT . '/admin/licencas.php')) $adm[] = ['a-lic', '/admin/licencas.php', 'lock', 'Licenças do Script'];
@@ -141,9 +142,11 @@ function page_start(string $title, string $active, array $u, string $bodyClass =
       <?= $link(['a-users', '/admin/usuarios.php', 'users', 'Clientes']) ?>
       <?= $link(['a-plans', '/admin/planos.php', 'tag', 'Planos e Pagamentos']) ?>
       <?= $link(['a-lib', '/admin/conteudos.php', 'film', 'Conteúdos e Banners']) ?>
+      <?= $link(['api', '/api.php', 'plug', 'API & Integração']) ?>
     <?php elseif (can_manage($u)): ?>
       <div class="nav-h"><?= ROLES[$u['role']] ?></div>
       <?= $link(['a-users', '/admin/usuarios.php', 'users', 'Meus Clientes']) ?>
+      <?= $link(['api', '/api.php', 'plug', 'API & Integração']) ?>
     <?php endif; ?>
   </nav>
   <div class="side-foot">

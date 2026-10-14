@@ -254,6 +254,17 @@ function db(): PDO
         }
         $pdo->exec('PRAGMA user_version = 7');
     }
+    if ($ver < 8) {
+        // v8: chaves de API para revendedores integrarem a criação/gestão de contas no sistema deles
+        $pdo->exec("CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+            token_hash TEXT NOT NULL UNIQUE, prefix TEXT NOT NULL DEFAULT '', label TEXT NOT NULL DEFAULT '',
+            active INTEGER NOT NULL DEFAULT 1, calls INTEGER NOT NULL DEFAULT 0,
+            rl_window INTEGER NOT NULL DEFAULT 0, rl_count INTEGER NOT NULL DEFAULT 0,
+            last_used TEXT, last_ip TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)");
+        $pdo->exec('CREATE INDEX IF NOT EXISTS api_keys_user ON api_keys(user_id)');
+        $pdo->exec('PRAGMA user_version = 8');
+    }
     return $pdo;
 }
 
@@ -1081,4 +1092,93 @@ function logo_palette(string $file): ?array
 function delete_upload(string $name): void
 {
     if ($name !== '' && preg_match('/^[a-f0-9]{24}\.(png|jpg)$/', $name)) @unlink(ROOT . '/uploads/' . $name);
+}
+
+/* ---------- API de revendedores ----------
+   Chaves no formato gg_live_XXXXXXXX…; guardamos só o hash (SHA-256). O token completo
+   aparece uma única vez, na hora de criar. Cada chave pertence a uma conta (revenda+). */
+
+const API_RATE_PER_MIN = 120; // chamadas por minuto por chave
+
+/** Gera um par [token em texto, prefixo visível]. */
+function api_new_token(): array
+{
+    $raw = 'gg_live_' . bin2hex(random_bytes(20)); // 40 hex
+    return [$raw, substr($raw, 0, 16)]; // prefixo mostra "gg_live_" + 8 chars
+}
+
+/** Cria uma chave para a conta e devolve o token em texto (só agora é possível vê-lo). */
+function api_key_create(int $uid, string $label): array
+{
+    [$token, $prefix] = api_new_token();
+    db()->prepare('INSERT INTO api_keys (user_id, token_hash, prefix, label, created_at) VALUES (?, ?, ?, ?, ?)')
+        ->execute([$uid, hash('sha256', $token), $prefix, mb_substr($label, 0, 60), now()]);
+    return ['token' => $token, 'prefix' => $prefix, 'id' => (int)db()->lastInsertId()];
+}
+
+/** Acha a chave ativa pelo token em texto (ou null). */
+function api_find_key(string $token): ?array
+{
+    if (!preg_match('/^gg_live_[a-f0-9]{40}$/', $token)) return null;
+    $st = db()->prepare('SELECT * FROM api_keys WHERE token_hash = ? AND active = 1');
+    $st->execute([hash('sha256', $token)]);
+    return $st->fetch() ?: null;
+}
+
+/** Janela deslizante por minuto. Devolve false quando estourou o limite. */
+function api_rate_ok(array $key): bool
+{
+    $min = (int)floor(time() / 60);
+    $pdo = db();
+    if ((int)$key['rl_window'] !== $min) {
+        $pdo->prepare('UPDATE api_keys SET rl_window = ?, rl_count = 1 WHERE id = ?')->execute([$min, $key['id']]);
+        return true;
+    }
+    if ((int)$key['rl_count'] >= API_RATE_PER_MIN) return false;
+    $pdo->prepare('UPDATE api_keys SET rl_count = rl_count + 1 WHERE id = ?')->execute([$key['id']]);
+    return true;
+}
+
+/** Marca uso da chave (contador, último acesso, IP). */
+function api_touch(array $key, string $ip): void
+{
+    db()->prepare('UPDATE api_keys SET calls = calls + 1, last_used = ?, last_ip = ? WHERE id = ?')->execute([now(), $ip, $key['id']]);
+}
+
+/** Corpo da requisição: aceita JSON ou formulário. */
+function api_input(): array
+{
+    $ct = strtolower((string)($_SERVER['CONTENT_TYPE'] ?? ''));
+    if (str_contains($ct, 'application/json')) {
+        $j = json_decode((string)file_get_contents('php://input'), true);
+        return is_array($j) ? $j : [];
+    }
+    return $_POST ?: [];
+}
+
+/** Resposta JSON da API e fim. */
+function api_out($data, int $code = 200): never
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Cache-Control: no-store');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    exit;
+}
+
+function api_err(string $msg, int $code = 400, string $type = 'error'): never
+{
+    api_out(['ok' => false, 'error' => ['type' => $type, 'message' => $msg]], $code);
+}
+
+/** Formato público de uma conta na API (sem hash de senha). */
+function api_user_view(array $u): array
+{
+    return [
+        'id' => (int)$u['id'], 'username' => $u['username'], 'name' => $u['name'], 'email' => $u['email'],
+        'role' => $u['role'], 'status' => $u['status'], 'paid' => (bool)(int)$u['paid'],
+        'expires_at' => $u['expires_at'], 'created_at' => $u['created_at'], 'last_login' => $u['last_login'],
+        'banners' => (int)$u['banners'],
+    ];
 }
