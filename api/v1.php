@@ -15,6 +15,14 @@ header('Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key');
 header('Access-Control-Max-Age: 86400');
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
 
+// Rede de segurança: garante a tabela mesmo se a migração ainda não tiver rodado (deploy parcial).
+db()->exec("CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE, prefix TEXT NOT NULL DEFAULT '', label TEXT NOT NULL DEFAULT '',
+    active INTEGER NOT NULL DEFAULT 1, calls INTEGER NOT NULL DEFAULT 0,
+    rl_window INTEGER NOT NULL DEFAULT 0, rl_count INTEGER NOT NULL DEFAULT 0,
+    last_used TEXT, last_ip TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)");
+
 /* ---------- Autenticação por chave ---------- */
 function bearer_token(): string
 {

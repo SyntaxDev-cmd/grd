@@ -8,6 +8,13 @@ require __DIR__ . '/inc/ui.php';
 $u = guard();
 if (!can_manage($u)) redirect('/painel.php');
 $pdo = db();
+// Rede de segurança: garante a tabela mesmo se a migração ainda não tiver rodado (deploy parcial).
+$pdo->exec("CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE, prefix TEXT NOT NULL DEFAULT '', label TEXT NOT NULL DEFAULT '',
+    active INTEGER NOT NULL DEFAULT 1, calls INTEGER NOT NULL DEFAULT 0,
+    rl_window INTEGER NOT NULL DEFAULT 0, rl_count INTEGER NOT NULL DEFAULT 0,
+    last_used TEXT, last_ip TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)");
 
 if (is_post()) {
     csrf_check();
